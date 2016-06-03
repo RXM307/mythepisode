@@ -2,9 +2,9 @@
 /**
  * Configure Mythepisode settings info
  *
- * @url         $URL$
- * @date        $Date$
- * @version     $Revision$
+ * @url         $URL: https://mythepisode.googlecode.com/svn/trunk/tmpl/default/set_override.php $
+ * @date        $Date: 2010-12-19 19:39:02 -0700 (Sun, 19 Dec 2010) $
+ * @version     $Revision: 346 $
  * @author      Author: Chris Kapp
  * @license     GPL
  *

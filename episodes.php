@@ -115,11 +115,11 @@
         //echo "Airdate  - $markAirdate<BR>";
         //echo "Summary  - $markSummary<BR>";
         //echo "ProgramID - $programId<BR>";
-        $markSeries = mysql_query("SELECT DISTINCT seriesid from oldrecorded 
-                                    WHERE title     = '$markTitleEsc' 
+        $markSeries = $db->query("SELECT DISTINCT seriesid from oldrecorded 
+                                    WHERE title     = ?
                                       AND seriesid != ''
-                                      AND seriesid != 'Unknown' ");
-        $markRow   = mysql_fetch_row($markSeries);
+                                      AND seriesid != 'Unknown' ", $markTitleEsc);
+        $markRow   = $markSeries->fetch_array();
         $markSerId = $markRow[0];
         if (!$markSerId) 
             $markSerId = "Unknown"; 
@@ -304,7 +304,7 @@
         }
 
     // Check the DB for any episodes of the show previously recorded
-        $getSubtitles = mysql_query("SELECT subtitle,starttime 
+        $getSubtitles = $db->query("SELECT subtitle,starttime 
                                        FROM oldrecorded 
                                       WHERE ($titleQuery) 
                                         AND (recstatus = '-2' OR recstatus = '-3')
@@ -312,12 +312,11 @@
 
         $recEpisodes = array();
         $recDate     = array();
-        while ($row = mysql_fetch_assoc($getSubtitles)) {
+        while ($row = $getSubtitles->fetch_array()) {
             $recDate[]     = date('Y-m-d', strtotime($row['starttime']));
             $recEpisodes[] = strtolower($row['subtitle']);
         }
 
-        mysql_free_result($getSubtitles);
         $recEpisodes = preg_replace('/[^0-9a-z ]+/i', '', $recEpisodes);
         $recEpisodes = preg_replace('/[^\w\d\s]+­/i', '', $recEpisodes);
         $recEpisodes = preg_replace('/(?: and | the | i | or | of |the | a | in )/i', '', $recEpisodes);
@@ -328,7 +327,7 @@
         $totalEpisodes = count($showEpisodes);
 
     // Check the DB for any episodes of the show available AND watched
-        $getSubtitles = mysql_query("SELECT subtitle,starttime 
+        $getSubtitles = $db->query("SELECT subtitle,starttime 
                                        FROM recorded 
                                       WHERE ($titleQuery) 
                                         AND watched = '1'
@@ -336,19 +335,18 @@
 
         $watchedEpisodes = array();
         $watchedDate     = array();
-        while ($row = mysql_fetch_assoc($getSubtitles)) {
+        while ($row = $getSubtitles->fetch_array()) {
             $watchedDate[]     = date('Y-m-d', strtotime($row['starttime']));
             $watchedEpisodes[] = strtolower($row['subtitle']);
         }
 
-        mysql_free_result($getSubtitles);
         $watchedEpisodes = preg_replace('/[^0-9a-z ]+/i', '', $watchedEpisodes);
         $watchedEpisodes = preg_replace('/[^\w\d\s]+­/i', '', $watchedEpisodes);
         $watchedEpisodes = preg_replace('/(?: and | the | i | or | of |the | a | in )/i', '', $watchedEpisodes);
         $watchedEpisodes = preg_replace('/\s+/', '', $watchedEpisodes);
     
     // Check the DB for any episodes of the show available AND unwatched
-        $getSubtitles = mysql_query("SELECT subtitle,starttime 
+        $getSubtitles = $db->query("SELECT subtitle,starttime 
                                        FROM recorded 
                                       WHERE ($titleQuery) 
                                         AND (watched = '0')
@@ -357,19 +355,18 @@
         $unwatchedEpisodes = array();
         $unwatchedDate     = array();
 
-        while ($row = mysql_fetch_assoc($getSubtitles)) {
+        while ($row = $getSubtitles->fetch_array()) {
             $unwatchedDate[]     = date('Y-m-d', strtotime($row['starttime']));
             $unwatchedEpisodes[] = strtolower($row['subtitle']);
         }
 
-        mysql_free_result($getSubtitles);
         $unwatchedEpisodes = preg_replace('/[^0-9a-z ]+/i', '', $unwatchedEpisodes);
         $unwatchedEpisodes = preg_replace('/[^\w\d\s]+­/i', '', $unwatchedEpisodes);
         $unwatchedEpisodes = preg_replace('/(?: and | the | i | or | of |the | a | in )/i', '', $unwatchedEpisodes);
         $unwatchedEpisodes = preg_replace('/\s+/', '', $unwatchedEpisodes);
 
     // Check the DB for any videos of the show available
-        $getSubtitles = mysql_query("SELECT subtitle,releasedate,season,episode
+        $getSubtitles = $db->query("SELECT subtitle,releasedate,season,episode
                                        FROM videometadata 
                                       WHERE ($titleQuery) 
                                    Group BY filename");
@@ -380,13 +377,12 @@
 
     // If we find videos in the DB
         if ($getSubtitles) {
-            while ($row = mysql_fetch_assoc($getSubtitles)) {
+            while ($row = $getSubtitles->fetch_array()) {
                 $videoDate[]     = date('Y-m-d', strtotime($row['releasedate']));
                 $videoEpisodes[] = strtolower($row['subtitle']);
                 $videoSE[]       = (string) ($row['season']."-".str_pad($row['episode'], 2, "0", STR_PAD_LEFT));
             }
 
-            mysql_free_result($getSubtitles);
             $videoEpisodes = preg_replace('/[^0-9a-z ]+/i', '', $videoEpisodes);
             $videoEpisodes = preg_replace('/[^\w\d\s]+­/i', '', $videoEpisodes);
             $videoEpisodes = preg_replace('/(?: and | the | i | or | of |the | a | in )/i', '', $videoEpisodes);
@@ -414,16 +410,16 @@
 // on the previous recordings page.
     if ($recordedTitle) {
     // Parse the program list
-        $result = mysql_query("SELECT title,subtitle,description,programid,starttime 
+        $result = $db->query("SELECT title,subtitle,description,programid,starttime 
                                  FROM oldrecorded 
                                 WHERE ($titleQuery) 
                                   AND (recstatus = '-2' OR recstatus = '-3')
                              GROUP BY programid");
 
         while (true) {
-	    while ($record = mysql_fetch_row($result)) {
-            // Create a new Data object
-                $show = new Data($record);
+	    while ($record = $result->fetch_array()) {
+            // Create a new program object
+                $show = new Program($record);
 
             // Make sure that everything we're dealing with is an array
                 if (!is_array($Programs[$show->title]))

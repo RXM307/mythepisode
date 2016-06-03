@@ -2,9 +2,9 @@
 /**
  * menu.php
  *
- * @url         $URL$
- * @date        $Date$
- * @version     $Revision$
+ * @url         $URL: https://mythepisode.googlecode.com/svn/trunk/tmpl/default/menu.php $
+ * @date        $Date: 2010-12-19 19:39:02 -0700 (Sun, 19 Dec 2010) $
+ * @version     $Revision: 346 $
  * @author      Author: Alec Christie
  * @license     GPL
  *

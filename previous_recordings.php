@@ -14,9 +14,6 @@
     require_once 'classes/Program.php';
     require_once 'includes/sorting.php';
 
-// Load mythepisode includes
-    require_once 'includes/previous_utils.php';
-
 // Queries for a specific program title
     isset($_GET['title']) or $_GET['title'] = $_POST['title'];
     isset($_GET['title']) or $_GET['title'] = $_SESSION['previous_recorded_title'];
@@ -25,18 +22,18 @@
     if (!empty($_GET['delete'])) {
         $dbCheck = $db->query('SELECT programid 
                                  FROM recorded
-                                WHERE programid=?', $_GET['programid']);
+                                WHERE programid=?', $_GET['category']);
 
         if ($dbCheck->num_rows() == 1) {
             $Warnings[] = 'Title still exists in Recorded Programs Table';
         } else {
             $deleteRecorded = $db->query('DELETE FROM oldrecorded
-                                           WHERE programid=?', $_GET['programid']);
+                                           WHERE programid=?', $_GET['category']);
         }
     }
 
 // Parse the program list
-    $result = mysql_query("SELECT title,subtitle,description,programid
+    $result = $db->query("SELECT title,subtitle,description,programid
                              FROM oldrecorded
                             WHERE (recstatus = '-2' OR recstatus = '-3')
                          GROUP BY programid
@@ -47,9 +44,9 @@
 
     while (true) {
         $Program_Titles = array();
-        while ($record = mysql_fetch_row($result)) {
-        // Create a new Data object		
-            $show = new Data($record);
+        while ($record = $result->fetch_row()) {
+        // Create a new program object
+            $show = new Program($record);
         // Assign a reference to this show to the various arrays
             $Program_Titles[$record[0]]++;
             if ($_GET['title'] && $_GET['title'] != $record[0])
@@ -69,7 +66,7 @@
             $Warnings[] = 'No matching programs found.';
             unset($_GET['title']);
             $Program_Titles['- Select a Show']++;
-            uksort($Program_Titles, "cmp");
+            uksort($Program_Titles, "strnatcasecmp");
             require_once tmpl_dir . 'previous_recordings.php';
         } else {
             break;
@@ -77,16 +74,14 @@
     }
 
 // Sort the program titles
-    uksort($Program_Titles, "cmp");
-//uksort($Program_Titles, "strnatcasecmp");
+    uksort($Program_Titles, "strnatcasecmp");
 
 // Keep track of the program/title the user wants to view
     $_SESSION['previous_recorded_title'] = $_GET['title'];
 
 // Sort the programs
     if (count($All_Shows))
-    //    uksort($All_Shows, "cmp");
-sort_programs($All_Shows, 'previous_recorded_sortby');
+        sort_programs($All_Shows, 'previous_recorded_sortby');
 
     if (empty($_GET['title'])) {
         $All_Shows = array();

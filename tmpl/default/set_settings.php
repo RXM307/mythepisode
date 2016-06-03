@@ -2,10 +2,10 @@
 /**
  * Configure Mythepisode settings info
  *
- * @url         $URL$
- * @date        $Date$
- * @version     $Revision$
- * @author      $Author$
+ * @url         $URL: https://mythepisode.googlecode.com/svn/trunk/tmpl/default/set_settings.php $
+ * @date        $Date: 2011-05-27 19:19:10 -0700 (Fri, 27 May 2011) $
+ * @version     $Revision: 370 $
+ * @author      $Author: chadopp $
  * @license     GPL
  *
 /**/

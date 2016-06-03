@@ -2,10 +2,10 @@
 /**
  * episode listing
  *
- * @url         $URL$
- * @date        $Date$
- * @version     $Revision$
- * @author      $Author$
+ * @url         $URL: https://mythepisode.googlecode.com/svn/trunk/tmpl/default/episodes.php $
+ * @date        $Date: 2011-06-01 19:03:16 -0700 (Wed, 01 Jun 2011) $
+ * @version     $Revision: 374 $
+ * @author      $Author: chadopp $
  * @license     GPL
  *
 /**/
@@ -19,12 +19,37 @@
 // Print the page header
     require 'modules/_shared/tmpl/'.tmpl.'/header.php';
 
-// Load includes
-    require_once 'includes/episode_utils.php';
-
     $remainingEpisodes = $totalEpisodes-$totalRecorded;
     $fixedTitle        = stripslashes($fixedTitle);
     $showTitle         = stripslashes($showTitle);
+
+    function get_sort_link_with_parms($field, $string, $parms) {
+        $link = get_sort_link($field,$string);
+        $pos = strpos($link, '?') + 1;
+        return substr($link,0,$pos).$parms.'&'.substr($link,$pos);
+    }
+
+    function imageResize($width, $height, $target) {
+
+    // Takes the larger size of the width and height and applies the  
+    // formula accordingly...this is so this script will work  
+    // dynamically with any size image
+
+        if ($width > $height)
+            $percentage = ($target / $width);
+        else 
+            $percentage = ($target / $height);
+
+    // Gets the new value and applies the percentage, then rounds the value
+        $width  = round($width * $percentage);
+        $height = round($height * $percentage);
+
+    // Returns the new sizes in html image tag format...this is so you
+    // can plug this function inside an image tag and just get the
+
+        return "width=\"$width\" height=\"$height\"";
+
+    } 
 
 // Get the image size of the picture and load it into an array
     if (file_exists("$imageDir/$showId.jpg")) {
@@ -225,69 +250,63 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
            }
         }
 
-        foreach ($showEpisodes as $episodeData) {
-        // Parse the show episode information for display 
-            if (preg_match('/^INFO/', $episodeData)) continue;
-            $episodeData = rtrim($episodeData); // Remove trailing whitespace
-            $data        = explode("\t", $episodeData); // Split on tabs
-            $epNumber    = $data[0]; // Episode Number
-            $epDate      = $data[1]; // Episode Date
-            $epSubtitle  = $data[2]; // Episode Subtitle
-            $epUrl       = $data[3]; // Episode URL
-            $epSummary   = $data[4]; // Episode Summary
-            $dat         = preg_replace('/\([1-9]\)/', '', $epSubtitle);
-            $dat         = trim($dat); // Remove leading and trailing whitespace
-            $markSub     = preg_replace('/\#/', '', $epSubtitle);
-            $epSummary   = preg_replace('/<.+?>/', '', $epSummary);
-            $shortSub    = strtolower($dat);
-            $shortSub    = preg_replace('/[^0-9a-z ]+/i', '', $shortSub);
-            $shortSub    = preg_replace('/[^\w\d\s]+­/i', '', $shortSub);
-            $shortSub    = preg_replace('/(?: and | the | i | or | of |the | a | in )/i', '', $shortSub);
-            $shortSub    = preg_replace('/\s+/', '', $shortSub);
-            $shortSub    = preg_replace('/[\/\;]/', '', $shortSub);
+        foreach ($showEpisodes as $Log) {
+            if (preg_match('/^INFO/', $Log)) continue;
+            $Log = rtrim($Log);
+            $data = explode("\t", $Log);
+            $dat = preg_replace('/\([1-9]\)/', '', $data[2]);
+            $dat = trim($dat);
+            $markSub =  preg_replace('/\#/', '', $data[2]);
+            $data[4] = preg_replace('/<.+?>/', '', $data[4]);
+            $datalc = strtolower($dat);
+            $datalc = preg_replace('/[^0-9a-z ]+/i', '', $datalc);
+            $datalc = preg_replace('/[^\w\d\s]+­/i', '', $datalc);
+            $datalc = preg_replace('/(?: and | the | i | or | of |the | a | in )/i', '', $datalc);
+            $datalc = preg_replace('/\s+/', '', $datalc);
+            $datalc = preg_replace('/[\/\;]/', '', $datalc);
 
             $classes = "";
 
         // Check for date matches first and then subtitle.  I do this since some
         // episodes have bogus subtitles or no subtitle. 
-            if ($unwatchedMatch = in_array("$epDate", $unwatchedDate) || 
-               ((!$subMatchDis) && ($unwatchedMatch = close_match("$shortSub", $unwatchedEpisodes, $matchPercent)))) {
+            if ($unwatchedMatch = in_array("$data[1]", $unwatchedDate) || 
+               ((!$subMatchDis) && ($unwatchedMatch = close_match("$datalc", $unwatchedEpisodes, $matchPercent)))) {
                 if ($allEpisodes != "all") {
                     $boxCheck = "unchecked";
                     continue;
                 }
                 $classes .= " cat_Sports will_record";
                 $boxCheck = "unchecked";
-            }elseif ($watchedMatch = in_array("$epDate", $watchedDate) || 
-                (!$subMatchDis) && (($watchedMatch = close_match("$shortSub", $watchedEpisodes, $matchPercent)))) {
+            }elseif ($watchedMatch = in_array("$data[1]", $watchedDate) || 
+                (!$subMatchDis) && (($watchedMatch = close_match("$datalc", $watchedEpisodes, $matchPercent)))) {
                 if ($allEpisodes != "all") {
                     $boxCheck = "unchecked";
                     continue;
                 }
                 $classes .= " deactivated";
                 $boxCheck = "unchecked";
-            }elseif ($videoMatch = in_array("$epNumber", $videoSE) || 
+            }elseif ($videoMatch = in_array("$data[0]", $videoSE) || 
             // Check MythVideo files for matches first using Season/Episode, then
             // date matches and then subtitle
-                ($videoMatch = in_array("$epDate", $videoDate) || 
-                ($videoMatch = close_match("$shortSub", $videoEpisodes, $matchPercent)))) {
+                ($videoMatch = in_array("$data[1]", $videoDate) || 
+                ($videoMatch = close_match("$datalc", $videoEpisodes, $matchPercent)))) {
                 if ($allEpisodes != "all") {
                     $boxCheck = "unchecked";
                     continue;
                 }
                 $classes .= " deactivated";
                 $boxCheck = "unchecked";
-            }elseif (($schedMatch = ($schedMatchDate = in_array("$epDate", $schedDate))) ||
-                     ((!$subMatchDis) && ($schedMatch = close_match("$shortSub", $schedEpisodes, $matchPercent)))) {
+            }elseif (($schedMatch = ($schedMatchDate = in_array("$data[1]", $schedDate))) ||
+                     ((!$subMatchDis) && ($schedMatch = close_match("$datalc", $schedEpisodes, $matchPercent)))) {
                 if($schedMatchDate) {
-                    $schedEpisodesDetails[$schedEpisodes[array_search("$epDate", $schedDate)]]["matched"] = true;
+                    $schedEpisodesDetails[$schedEpisodes[array_search("$data[1]", $schedDate)]]["matched"] = true;
                 } else {
-                    $schedEpisodesDetails["$shortSub"]["matched"] = true;
+                    $schedEpisodesDetails["$datalc"]["matched"] = true;
                 }
                 $classes .= " scheduled";
                 $boxCheck = "unchecked";
-            }elseif ($prevMatch = in_array("$epDate", $recDate) || 
-                ((!$subMatchDis) && ($prevMatch = close_match("$shortSub", $recEpisodes, $matchPercent)))) {
+            }elseif ($prevMatch = in_array("$data[1]", $recDate) || 
+                ((!$subMatchDis) && ($prevMatch = close_match("$datalc", $recEpisodes, $matchPercent)))) {
                 if ($allEpisodes != "all") {
                     $boxCheck = "unchecked";
                     continue;
@@ -303,7 +322,7 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
 
         <?php
 
-            if (((preg_match('/^Season/', $epNumber)) || (preg_match('/^Special/', $epNumber))) && (!$special)) {
+            if (((preg_match('/^Season/', $data[0])) || (preg_match('/^Special/', $data[0]))) && (!$special)) {
                 $special = 1;
         ?>
             <tr class="menu" align="left">
@@ -333,32 +352,32 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
                   if(!$tvwishHide) {
               ?>
               <td class="<?php echo $classes ?>">
-                <input type="checkbox" <?php echo $boxCheck?> name="f[]" value="<?php echo htmlspecialchars($epSubtitle)?>">
+                <input type="checkbox" <?php echo $boxCheck?> name="f[]" value="<?php echo htmlspecialchars($data[2])?>">
               </td>
               <?php 
                   }
               ?>
      
         <td class="<?php echo $classes ?>">
-          <?php echo htmlspecialchars($epNumber)?>
+          <?php echo htmlspecialchars($data[0])?>
         </td>
 
         <td class="<?php echo $classes ?>">
-          <?php echo htmlspecialchars($epDate)?>
+          <?php echo htmlspecialchars($data[1])?>
         </td>
  
         <?php
-            if ($epUrl != "") {
+            if ($data[3] != "") {
         ?>
             <td class="<?php echo $classes ?>">
-              <a href=<?php echo $epUrl?> target="_blank"><?php echo htmlspecialchars($epSubtitle)?></a>
+              <a href=<?php echo $data[3]?> target="_blank"><?php echo htmlspecialchars($data[2])?></a>
             </td>
 
         <?php
             } else {
         ?>
             <td class="<?php echo $classes ?>">
-              <?php echo htmlspecialchars($epSubtitle)?>
+              <?php echo htmlspecialchars($data[2])?>
             </td>
 
         <?php
@@ -366,7 +385,7 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
         ?>
 
         <td width="60%" class="<?php echo $classes ?>">
-          <?php echo $epSummary?>
+          <?php echo $data[4]?>
         </td>
 
         <td class="<?php echo $classes?>">
@@ -383,7 +402,7 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
                 echo "Previously Recorded";
             } else {
           ?> 
-                <a onclick="ajax_add_request()" href="episode/episodes/?mark=yes&marktitle=<?php echo urlencode($fixedTitle)?>&marksubtitle=<?php echo urlencode($markSub)?>&markairdate=<?php echo htmlspecialchars($epDate)?>&marksummary=<?php echo htmlspecialchars($epSummary)?>">
+                <a onclick="ajax_add_request()" href="episode/episodes/?mark=yes&marktitle=<?php echo urlencode($fixedTitle)?>&marksubtitle=<?php echo urlencode($markSub)?>&markairdate=<?php echo htmlspecialchars($data[1])?>&marksummary=<?php echo htmlspecialchars($data[4])?>">
                 <?php echo t('Mark as Recorded') ?>
           <?php
             }
@@ -398,8 +417,8 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
         } 
         $_SESSION['episodes']['allepisodes'] = "all";
         $classes = " record_duplicate scheduled";
-        foreach ($schedEpisodesDetails as $logKey => $episodeArray) {
-            if (!$episodeArray["matched"] && !in_array($logKey, $recEpisodes)) {
+        foreach ($schedEpisodesDetails as $logKey => $Log) {
+            if (!$Log["matched"] && !in_array($logKey, $recEpisodes)) {
     ?>
     <tr class="<?php echo $classes ?>" align="left">
              <?php 
@@ -413,19 +432,19 @@ if (isset($_SESSION['episodes']['allepisodes'])) {
              ?>
        
       <td class="<?php echo $classes ?>">
-        <?php echo htmlspecialchars($episodeArray["syndicatedepisodenumber"])?>
+        <?php echo htmlspecialchars($Log["syndicatedepisodenumber"])?>
       </td>
 
       <td class="<?php echo $classes ?>">
-        <?php echo htmlspecialchars($episodeArray["airdate"])?>
+        <?php echo htmlspecialchars($Log["airdate"])?>
       </td>
    
       <td class="<?php echo $classes ?>">
-        <?php echo htmlspecialchars($episodeArray["subtitle"])?>
+        <?php echo htmlspecialchars($Log["subtitle"])?>
       </td>
   
       <td width="60%" class="<?php echo $classes ?>">
-        <?php echo $episodeArray["description"]?>
+        <?php echo $Log["description"]?>
       </td>
   
       <td class="<?php echo $classes?>">Unmatched but Scheduled to Record
@@ -462,10 +481,10 @@ if (isset($_SESSION['episodes']['title'])) {
     <table width="100%" border="0" cellpadding="4" cellspacing="2" class="list small">
     <tr class="menu">
       <td><?php echo t('Title')?></a></td>
-      <td><?php echo get_sort_link_recorded('subtitle',t('Subtitle'), 'title='. $showTitle)?></a></td>
+      <td><?php echo get_sort_link_with_parms('subtitle',t('Subtitle'), 'title='. $showTitle)?></a></td>
       <td><?php echo t('Date Recorded')?></a></td>
-      <td><?php echo get_sort_link_recorded('programid',t('Programid'), 'title='. $showTitle)?></a></td>
-      <td><?php echo get_sort_link_recorded('description',t('Synopsis'), 'title='. $showTitle)?></a></td>
+      <td><?php echo get_sort_link_with_parms('category',t('Programid'), 'title='. $showTitle)?></a></td>
+      <td><?php echo t('Synopsis')?></a></td>
       <?php/*<td><?php echo t('Delete')?></td>*/?>
     </tr>
 
@@ -473,17 +492,17 @@ if (isset($_SESSION['episodes']['title'])) {
 
         $row = 0;
 
-        foreach ($All_Shows as $recdata) {
-            list($startdate, $time) = explode(" ", $recdata->starttime);
+        foreach ($All_Shows as $show) {
+            list($startdate, $time) = explode(" ", $show->chanid);
     ?>
         <tr class="deactivated">
-          <td><?php echo $recdata->title?></td>
-          <td><?php echo $recdata->subtitle?></td>
-          <td><?php echo $startdate?></td>
-          <td><?php echo $recdata->programid?></td>
-          <td><?php echo $recdata->description?></td>
+          <td><?php echo $show->title; ?></td>
+          <td><?php echo $show->subtitle ?></td>
+          <td><?php echo $startdate ?></td>
+          <td><?php echo $show->category ?></td>
+          <td><?php echo $show->description ?></td>
 
-          <td class="x-commands commands"><a onclick="ajax_add_request()" href="episode/episodes/?delete=yes&programid=<?php echo urlencode($recdata->programid)?>&title=<?php echo urlencode($recdata->title)?>" title="<?php echo t('Delete this episode') ?>"><?php echo t('Delete') ?></a></td>
+          <td class="x-commands commands"><a onclick="ajax_add_request()" href="episode/episodes/?delete=yes&category=<?php echo urlencode($show->category)?>&title=<?php echo urlencode($show->title)?>" title="<?php echo t('Delete this episode') ?>"><?php echo t('Delete') ?></a></td>
  
         </tr>
     <?php

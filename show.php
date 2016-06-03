@@ -10,9 +10,6 @@
  *
 /**/
 
-// Load includes
-    require_once 'includes/show_utils.php';
-
 // Determine what view we want to display; all, current, or recorded 
     if ($_GET['state']) {
         unset($_SESSION['show']['state']);
@@ -87,7 +84,6 @@
             array_walk($tempShows, 'explodeShows');
 
         // Open showsDat for writing
-            ini_set("memory_limit", "128M");
             $handle = fopen($showsDat, 'w') or die ("can't open showsDat");
             fwrite($handle, serialize($recordedShows));
             fclose($handle);
@@ -97,14 +93,13 @@
     }
 
 // Get a list of previous recordings from the DB
-    $recordings = mysql_query("SELECT distinct title 
-                                 FROM oldrecorded") 
-                  or trigger_error('SQL Error: ' . mysql_error(), FATAL);
+    $recordings = $db->query("SELECT distinct title 
+                                 FROM oldrecorded"); 
 
 // Put previously recorded shows in an array
     $oldRecorded = array();
-    while ($row1 = mysql_fetch_assoc($recordings))
-        $oldRecorded[] = preg_replace('/\s+/', ' ', strtolower($row1['title']));
+    while ($row1 = $recordings->fetch_array())
+        $oldRecorded[] = str_replace(' ', '', strtolower($row1['title']));
 
 // Override is used for shows that have names that don't matchup properly
 // For example mythtv records "Survivor" as "Survivor: Nicaragua".  Since
@@ -126,8 +121,8 @@
         list($mythName,$rageName) = explode(":::", "$overrideShow");
         $rageName  = trim($rageName);
         $mythName  = trim($mythName);
-        $rageName  = preg_replace('/\s+/', ' ', strtolower($rageName));
-        $mythName  = preg_replace('/\s+/', ' ', strtolower($mythName));
+        $rageName  = str_replace(' ', '', strtolower($rageName));
+        $mythName  = str_replace(' ', '', strtolower($mythName));
         $mythTitle = explode("---", "$mythName");
     // Determine each new show title and add it to oldRecorded array
         foreach ($mythTitle as $tempTitle) {
@@ -143,11 +138,9 @@
         }
     }
 
-    mysql_free_result($recordings);
 
 // Sort oldRecorded and get a count 
-    usort($oldRecorded, "cmp_shows");
-    $oldRecorded = preg_replace('/\s+/', '', $oldRecorded);
+    sort($oldRecorded);
     $recordedCount = count($oldRecorded) - $overrideCount;
 
 // Load the class for this page

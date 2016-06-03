@@ -2,10 +2,10 @@
 /**
  * previous recordings
  *
- * @url         $URL$
- * @date        $Date$
- * @version     $Revision$
- * @author      $Author$
+ * @url         $URL: https://mythepisode.googlecode.com/svn/trunk/tmpl/default/previous_recordings.php $
+ * @date        $Date: 2010-12-01 21:14:52 -0700 (Wed, 01 Dec 2010) $
+ * @version     $Revision: 303 $
+ * @author      $Author: chadopp $
  * @license     GPL
  *
 /**/
@@ -19,8 +19,11 @@
 // Print the page header
     require 'modules/_shared/tmpl/'.tmpl.'/header.php';
 
-// Load includes
-    require_once 'includes/previous_utils.php';
+    function get_sort_link_with_parms($field, $string) {
+        $link = get_sort_link($field,$string);
+        $pos = strpos($link, '?') + 1;
+        return substr($link,0,$pos).'&'.substr($link,$pos);;
+    }
 
 ?>
 
@@ -64,20 +67,20 @@ td.x-active {
   <tr class="menu">
     <td><?php echo t('Title')?></a></td>
     <td><?php echo get_sort_link_with_parms('subtitle',t('Subtitle'))?></a></td>
-    <td><?php echo get_sort_link_with_parms('programid',t('Programid'))?></a></td>
+    <td><?php echo get_sort_link_with_parms('category',t('Programid'))?></a></td>
     <td><?php echo t('Synopsis')?></a></td>
   </tr>
 
 <?php
-foreach ($All_Shows as $prevrec) {
+foreach ($All_Shows as $show) {
 ?>
 
   <tr class="deactivated">
-    <td><?php echo $prevrec->title?></td>
-    <td><?php echo $prevrec->subtitle?></td>
-    <td><?php echo $prevrec->programid?></td>
-    <td><?php echo $prevrec->description?></td>
-    <td class="x-commands commands"><a onclick="ajax_add_request()" href="episode/previous_recordings?delete=yes&programid=<?php echo urlencode($prevrec->programid)?>"  title="<?php echo t('Delete this episode') ?>"><?php echo t('Delete') ?></a></td>
+    <td><?php echo $show->title; ?></td>
+    <td><?php echo $show->subtitle?></td>
+    <td><?php echo $show->category?></td>
+    <td><?php echo $show->description?></td>
+    <td class="x-commands commands"><a onclick="ajax_add_request()" href="episode/previous_recordings?delete=yes&category=<?php echo urlencode($show->category)?>"  title="<?php echo t('Delete this episode') ?>"><?php echo t('Delete') ?></a></td>
   </tr>
 
 <?php

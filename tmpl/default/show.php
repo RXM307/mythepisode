@@ -2,10 +2,10 @@
 /**
  * Show listing
  *
- * @url         $URL$
- * @date        $Date$
- * @version     $Revision$
- * @author      $Author$
+ * @url         $URL: https://mythepisode.googlecode.com/svn/trunk/tmpl/default/show.php $
+ * @date        $Date: 2010-12-01 21:14:52 -0700 (Wed, 01 Dec 2010) $
+ * @version     $Revision: 303 $
+ * @author      $Author: chadopp $
  * @license     GPL
  *
 /**/
@@ -128,25 +128,18 @@ if ($_SESSION['show']['state'] != "recorded") {
     $j=1;
 
     // Go through list of shows from tvrage.com and place theme on the page
-        foreach ($allShows as $tvrageData) { 
-        // An example line from allshows array is:
-        // kingofqueens  The King of Queens  The King of Queens  0
-            $tvrageData  = rtrim($tvrageData); // Remove trailing whitespace
-            $tvrageData  = preg_replace('/<.+?>/', '', $tvrageData);
-            $data        = explode("\t", $tvrageData); // Split on tabs
-            $shortTitle  = $data[0]; // kingofqueens 
-            $showString  = $data[1]; // The King of Queens
-            $longTitle   = $data[2]; // The King of Queens
-            $showStatus  = $data[3]; // 0
-            $shortTitle  = ucfirst($shortTitle); // Kingofqueens
-            $firstChar   = $shortTitle{0}; // Get first character - K
-            $shortString = str_replace(' ', '', strtolower($showString)); // thekingofqueens
-
+        foreach ($allShows as $Log) { 
+            $Log = rtrim($Log);
+            $Log = preg_replace('/<.+?>/', '', $Log);
+            $data = explode("\t", $Log);
+            $data[0] = ucfirst($data[0]);
+            $firstChar = $data[0]{0}; // Get first character
+            $datastr = str_replace(' ', '', strtolower($data[1]));
             if ($state == "all") {
                 $j=0;
             }
 
-            if ($showStatus >= $j) {
+            if ($data[3] >= $j) {
                 if ($firstChar != $fc1) {
                     if (!preg_match('/[^0-9]/', $firstChar)) {
                         if ($a == 0) {
@@ -176,18 +169,18 @@ if ($_SESSION['show']['state'] != "recorded") {
                 ?>
                 <tr class="settings" align="left">
                 <?php
-                    if (in_array("$shortString", $oldRecorded)) {
+                    if (in_array("$datastr", $oldRecorded)) {
                 ?>
 				
                     <td bgcolor="green">
-                      <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($showString)?>&longshow=<?php echo urlencode($longTitle)?>&showname=<?php echo urlencode($shortTitle)?>'><?php echo  htmlspecialchars($longTitle)?></a>
+                      <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($data[1])?>&longshow=<?php echo urlencode($data[2])?>&showname=<?php echo urlencode($data[0])?>'><?php echo  htmlspecialchars($data[2])?></a>
                     </td>
 
                     <?php
                         } else {
                     ?>
                     <td>
-                      <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($showString)?>&longshow=<?php echo urlencode($longTitle)?>&showname=<?php echo urlencode($shortTitle)?>'><?php echo htmlspecialchars($longTitle)?></a>
+                      <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($data[1])?>&longshow=<?php echo urlencode($data[2])?>&showname=<?php echo urlencode($data[0])?>'><?php echo htmlspecialchars($data[2])?></a>
                     </td>
 
                     <?php
@@ -196,10 +189,10 @@ if ($_SESSION['show']['state'] != "recorded") {
                         $fc1=$firstChar;
                 
                     } else {
-                        if (in_array("$shortString", $oldRecorded)) {
+                        if (in_array("$datastr", $oldRecorded)) {
                     ?>
                         <td bgcolor="green">
-                          <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($showString)?>&longshow=<?php echo urlencode($longTitle)?>&showname=<?php echo urlencode($shortTitle)?>'><?php echo htmlspecialchars($longTitle)?></a>
+                          <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($data[1])?>&longshow=<?php echo urlencode($data[2])?>&showname=<?php echo urlencode($data[0])?>'><?php echo htmlspecialchars($data[2])?></a>
                         </td>
 
                     <?php
@@ -207,7 +200,7 @@ if ($_SESSION['show']['state'] != "recorded") {
                     ?>
                     
                         <td>
-                          <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($showString)?>&longshow=<?php echo urlencode($longTitle)?>&showname=<?php echo $shortTitle?>&allepisodes=<?php echo all?>'><?php echo htmlspecialchars($longTitle)?></a>
+                          <a onclick="ajax_add_request()" href='episode/episodes/?showstr=<?php echo urlencode($data[1])?>&longshow=<?php echo urlencode($data[2])?>&showname=<?php echo $data[0]?>&allepisodes=<?php echo all?>'><?php echo htmlspecialchars($data[2])?></a>
                         </td>
 
                     <?php
@@ -234,17 +227,12 @@ if ($_SESSION['show']['state'] != "recorded") {
 
     // Go through list of shows from tvrage.com and place theme on the page
         foreach ($oldRecorded as $show) {
-            $recordedData = $recordedShows[$show]; // kingofqueens  The King of Queens  The King of Queens  0
-            $shortTitle   = $recordedData[0]; // kingofqueens
-            $showString   = $recordedData[1]; // The King of Queens
-            $longTitle    = $recordedData[2]; // The King of Queens
-
-            if (! $recordedData ) {
+            $data = $recordedShows[$show];
+            if (! $data ) {
                 continue;
             }
+            $firstChar = strtoupper($data[1]{0});
 
-            static $excludes = '/^(?i)(an?|the)\s+/'; // Add excluded words here
-            $firstChar = strtoupper(substr(preg_replace($excludes, '', $showString),0,1));
             if ($firstChar != $fc1) {
                 if (!preg_match('/[^0-9\']/', $firstChar)) {
                     if (!$stillNums) {
@@ -276,7 +264,7 @@ if ($_SESSION['show']['state'] != "recorded") {
             }
         ?>
 
-   <td onmouseover="changeCell(this)" onmouseout="changeCell(this)"><a onclick="ajax_add_request()" href="episode/episodes/?showstr=<?php echo urlencode($showString)?>&longshow=<?php echo urlencode($longTitle)?>&showname=<?php echo urlencode($shortTitle)?>"><?php echo htmlspecialchars($longTitle)?>
+   <td onmouseover="changeCell(this)" onmouseout="changeCell(this)"><a onclick="ajax_add_request()" href="episode/episodes/?showstr=<?php echo urlencode($data[1])?>&longshow=<?php echo urlencode($data[2])?>&showname=<?php echo urlencode($data[0])?>"><?php echo htmlspecialchars($data[2])?>
    </td>
 
         <?php

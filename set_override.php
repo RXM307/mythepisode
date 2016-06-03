@@ -43,15 +43,14 @@
     $recordedShows = unserialize(file_get_contents($showsDat));
 
 // Get a list of previous recordings from the DB
-    $recordings = mysql_query("SELECT distinct title 
+    $recordings = $db->query("SELECT distinct title 
                                  FROM oldrecorded 
                                 WHERE not programid like 'MV%' 
-                                  AND (recstatus = '-2' OR recstatus = '-3')") 
-                  or trigger_error('SQL Error: ' . mysql_error(), FATAL);
+                                  AND (recstatus = '-2' OR recstatus = '-3')"); 
 
 // Put previously recorded shows in an array
     $oldRecorded = array();
-    while ($row1 = mysql_fetch_assoc($recordings)) {
+    while ($row1 = $recordings->fetch_array()) {
         $temp = str_replace(' ', '', strtolower($row1['title']));
         if(!array_key_exists($temp, $recordedShows))
             $oldRecorded[$temp] =  $row1['title'];
