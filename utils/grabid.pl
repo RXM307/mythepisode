@@ -69,15 +69,17 @@ my ($tvdbInfo,$tvdbEpnum,$tvdbSeason,$tvdbepnum,$tvdbaired,$tvdbEpisodes,
 ## Get information from tvrage.com using their quickinfo script
 ## The quickinfo script has some issues that I have reported, but
 ## for now strip a few things.
-$show =~ s/\&//g; 
-$show =~ s/\#//g; 
-$show =~ s/ with//g; 
-$show =~ s/ With//g; 
+### Removed as tvrage.com API is down
+#$show =~ s/\&//g; 
+#$show =~ s/\#//g; 
+#$show =~ s/ with//g; 
+#$show =~ s/ With//g; 
 
 ## Get data from TheTVDB.com if needed
 sub TVDB_Info {
     ## Get show info from TheTVDB.com
     my $tvdbsite = get "http://www.thetvdb.com/api/GetSeries.php?seriesname=$show";
+    print "Site URL is http://www.thetvdb.com/api/GetSeries.php?seriesname=$show\n" if $debug;
     if (!$tvdbsite) {
         print "Show id for $show not found. Could be temporary issues accessing thetvdb.com\n";
         exit 1;

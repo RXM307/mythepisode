@@ -21,11 +21,9 @@
         require_once 'classes/Schedule.php';
         require_once 'classes/Channel.php';
         require_once 'classes/Program.php';
-        require_once 'classes/Common.php';
         require_once 'includes/recording_schedules.php';
     } else {
         require_once 'includes/recording_schedules.php';
-        require_once 'classes/Common.php';
         require_once 'classes/Channel.php';
         require_once 'classes/Program.php';
         require_once 'classes/Schedule.php';
@@ -102,7 +100,7 @@
         $allEpisodes = "all";
         $_SESSION['episodes']['allepisodes'] = "all";
         $markTitle    = $_GET['marktitle'];
-        $markTitleEsc = mysql_real_escape_string($_GET['marktitle']);
+        $markTitleEsc = escape($_GET['marktitle']);
         $markSub      = $_GET['marksubtitle'];
         $markAirdate  = $_GET['markairdate'];
         $markSummary  = $_GET['marksummary'];
@@ -116,7 +114,7 @@
         //echo "Summary  - $markSummary<BR>";
         //echo "ProgramID - $programId<BR>";
         $markSeries = $db->query("SELECT DISTINCT seriesid from oldrecorded 
-                                    WHERE title     = ?
+                                    WHERE title     = ? 
                                       AND seriesid != ''
                                       AND seriesid != 'Unknown' ", $markTitleEsc);
         $markRow   = $markSeries->fetch_array();
@@ -295,7 +293,6 @@
 
     // Setup the title query string based off of mythName array.
         foreach ($mythName as $queryString) {
-            $queryString = mysql_real_escape_string($queryString);
             if (!$titleQuery) {
                 $titleQuery = "title like '%{$queryString}'";
             } else {
@@ -304,7 +301,7 @@
         }
 
     // Check the DB for any episodes of the show previously recorded
-        $getSubtitles = $db->query("SELECT subtitle,starttime 
+        $getSubtitles = $db->query("SELECT subtitle,starttime,programid 
                                        FROM oldrecorded 
                                       WHERE ($titleQuery) 
                                         AND (recstatus = '-2' OR recstatus = '-3')
@@ -417,10 +414,10 @@
                              GROUP BY programid");
 
         while (true) {
-	    while ($record = $result->fetch_array()) {
+            while ($record = $result->fetch_array()) {
             // Create a new program object
                 $show = new Program($record);
-
+            
             // Make sure that everything we're dealing with is an array
                 if (!is_array($Programs[$show->title]))
                     $Programs[$show->title] = array();
